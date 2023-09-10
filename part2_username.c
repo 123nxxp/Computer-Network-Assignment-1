@@ -1,51 +1,43 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <pcap.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
 
-#define PCAP_FILE "0.pcap"
+void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+    char *search_string = "username=secret";
+    char *data = (char *)packet;
+    int data_len = pkthdr->len;
 
-void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet);
+    // Search for the search_string in the packet data
+    for (int i = 0; i < data_len - strlen(search_string); i++) {
+        if (strncmp(data + i, search_string, strlen(search_string)) == 0) {
+            printf("Connection secret found in packet:\n");
+            printf("%.*s\n", data_len - i, data + i);
+            return;
+        }
+    }
+}
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <pcap_file>\n", argv[0]);
+        return 1;
+    }
+
+    char *filename = argv[1];
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
 
-    // Open the .pcap file
-    handle = pcap_open_offline(PCAP_FILE, errbuf);
+    handle = pcap_open_offline(filename, errbuf);
     if (handle == NULL) {
         fprintf(stderr, "Error opening pcap file: %s\n", errbuf);
         return 1;
     }
 
-    // Start packet processing loop
-    pcap_loop(handle, 0, packet_handler, NULL);
-
-    // Close the .pcap file
-    pcap_close(handle);
-
-    return 0;
-}
-
-void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
-    struct ip *ip_header;
-    struct tcphdr *tcp_header;
-    u_char *tcp_flags;
-
-    ip_header = (struct ip *)(packet + 14); // Assuming Ethernet frames, adjust as needed
-    if (ip_header->ip_p == IPPROTO_TCP) {
-        tcp_header = (struct tcphdr *)(packet + 14 + ip_header->ip_hl * 4);
-        tcp_flags = (u_char *)&tcp_header->th_flags;
-
-        // Print the TCP flags
-        printf("TCP Flags: ");
-        if (*tcp_flags & TH_FIN) printf("FIN ");
-        if (*tcp_flags & TH_SYN) printf("SYN ");
-        if (*tcp_flags & TH_RST) printf("RST ");
-        if (*tcp_flags & TH_PUSH) printf("PSH ");
-        if (*tcp_flags & TH_ACK) printf("ACK ");
-        if (*tcp_flags & TH_URG) printf("URG ");
-        printf("\n");
+    if (pcap_loop(handle, 0, packet_handler, NULL) < 0) {
+        fprintf(stderr, "Error in pcap_loop()\n");
+        return 1;
     }
+
+    pcap_close(handle);
+    return 0;
 }
