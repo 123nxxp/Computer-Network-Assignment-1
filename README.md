@@ -46,4 +46,4 @@ Instructions specific to each file have been added in the pdf file for each of t
 
 ## Part 4
 
-The pcap file for Part-4 Q1 has been uploaded separately by the name part4_q1.pcapng.
+Part-4 questions have been solved with screenshots attached in the pdf file.
