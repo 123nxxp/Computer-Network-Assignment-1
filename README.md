@@ -40,7 +40,7 @@ To compile and execute C files for different questions, follow these steps:
 
 5. **View the Output
 
-##Note
+## Note
 
 1. Instructions specific to each file have been added in the pdf file for each of the questions/parts.
 2. For part3.c file, if pcap.h header file is not installed, use the command ``` sudo apt-get install libpcap0.8-dev ``` to install the header file and then run the command ``` gcc -o part3 part3.c -lpcap ```.
